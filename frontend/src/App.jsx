@@ -7,6 +7,7 @@ import Signup from './pages/Signup.jsx'
 import Chat from './pages/Chat.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Lookup from './pages/Lookup.jsx'
+import Goals from './pages/Goals.jsx'
 
 function NavBar() {
   const { user, logout } = useAuth()
@@ -31,6 +32,7 @@ function NavBar() {
         {link('/chat', 'Ask Claude')}
         {link('/recipes', 'Recipes')}
         {link('/lookup', 'Barcode + Photo')}
+        {link('/goals', 'Goals')}
       </div>
       <div className="nav-user">
         <span>{user.display_name}</span>
@@ -60,6 +62,7 @@ export default function App() {
           <Route path="/chat" element={<RequireAuth><Chat /></RequireAuth>} />
           <Route path="/recipes" element={<RequireAuth><Recipes /></RequireAuth>} />
           <Route path="/lookup" element={<RequireAuth><Lookup /></RequireAuth>} />
+          <Route path="/goals" element={<RequireAuth><Goals /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import init_db
-from .routers import auth, chat, foods, lookup, recipes
+from .routers import auth, chat, foods, goals, lookup, recipes
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(recipes.router, prefix="/api/recipes", tags=["recipes"])
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
     app.include_router(lookup.router, prefix="/api/lookup", tags=["lookup"])
+    app.include_router(goals.router, prefix="/api/goals", tags=["goals"])
 
     @app.get("/api/health")
     def health():

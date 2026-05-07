@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models."""
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -23,6 +23,8 @@ class User(Base):
     food_entries: Mapped[list["FoodEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     recipes: Mapped[list["Recipe"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     chat_messages: Mapped[list["ChatMessage"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    goals: Mapped["Goals | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
+    weight_entries: Mapped[list["WeightEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class FoodEntry(Base):
@@ -87,3 +89,46 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
 
     user: Mapped[User] = relationship(back_populates="chat_messages")
+
+
+class Goals(Base):
+    """One row per user. Daily nutrition targets + weight goal.
+
+    All fields are optional so a user can set any subset (e.g. just calories).
+    Weights are stored in pounds. `weekly_rate_lb` is signed:
+        negative = losing, positive = gaining, 0/None = maintaining.
+    """
+    __tablename__ = "goals"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True, nullable=False)
+
+    # Daily nutrition targets (per day, not per serving).
+    calorie_target: Mapped[float | None] = mapped_column(Float, nullable=True)
+    protein_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    carbs_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fat_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Weight goal.
+    start_weight_lb: Mapped[float | None] = mapped_column(Float, nullable=True)
+    target_weight_lb: Mapped[float | None] = mapped_column(Float, nullable=True)
+    weekly_rate_lb: Mapped[float | None] = mapped_column(Float, nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+    user: Mapped[User] = relationship(back_populates="goals")
+
+
+class WeightEntry(Base):
+    """A dated weight measurement (in pounds)."""
+    __tablename__ = "weight_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+
+    weight_lb: Mapped[float] = mapped_column(Float, nullable=False)
+    measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="weight_entries")

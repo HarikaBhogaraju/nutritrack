@@ -2,6 +2,20 @@
 
 const BASE = import.meta.env.VITE_API_BASE || ''
 
+// JS Date.getTimezoneOffset() returns minutes UTC differs from local
+// (e.g. New York EST → +300, Tokyo JST → −540). The backend uses the same convention.
+export function localTzOffsetMinutes() {
+  return new Date().getTimezoneOffset()
+}
+
+// Local date as YYYY-MM-DD (uses local TZ, NOT UTC — important for "today").
+export function localDateString(d = new Date()) {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 export function getToken() {
   return localStorage.getItem('nutritrack.token')
 }
@@ -39,10 +53,14 @@ export const api = {
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload }),
   me: () => request('/api/auth/me'),
 
-  listEntries: (date) => request(`/api/foods${date ? `?date=${date}` : ''}`),
+  listEntries: (date) => {
+    const qs = new URLSearchParams({ tz_offset: String(localTzOffsetMinutes()) })
+    if (date) qs.set('date', date)
+    return request(`/api/foods?${qs}`)
+  },
   createEntry: (entry) => request('/api/foods', { method: 'POST', body: entry }),
   deleteEntry: (id) => request(`/api/foods/${id}`, { method: 'DELETE' }),
-  dashboard: () => request('/api/foods/dashboard'),
+  dashboard: () => request(`/api/foods/dashboard?tz_offset=${localTzOffsetMinutes()}`),
 
   listRecipes: (favoritesOnly = false) =>
     request(`/api/recipes${favoritesOnly ? '?favorites_only=true' : ''}`),
@@ -62,4 +80,11 @@ export const api = {
     form.append('file', file)
     return request('/api/lookup/photo', { method: 'POST', body: form, isForm: true })
   },
+
+  getGoals: () => request('/api/goals'),
+  updateGoals: (goals) => request('/api/goals', { method: 'PUT', body: goals }),
+
+  listWeights: (days = 180) => request(`/api/goals/weight?days=${days}`),
+  addWeight: (entry) => request('/api/goals/weight', { method: 'POST', body: entry }),
+  deleteWeight: (id) => request(`/api/goals/weight/${id}`, { method: 'DELETE' }),
 }

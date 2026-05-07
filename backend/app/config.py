@@ -14,8 +14,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 7  # 1 week
 
+    # Default is empty on purpose — the real value belongs in backend/.env, NOT here.
+    # config.py is committed to git; .env is in .gitignore.
     ANTHROPIC_API_KEY: str = ""
-    CLAUDE_MODEL: str = "claude-sonnet-4-6"
+    CLAUDE_MODEL: str = "claude-sonnet-4-5"
 
     CORS_ORIGINS: str = "http://localhost:5173"
 

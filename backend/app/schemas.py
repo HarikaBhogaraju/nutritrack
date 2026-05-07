@@ -1,5 +1,5 @@
 """Pydantic request/response schemas."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -136,3 +136,41 @@ class PhotoLookupResponse(BaseModel):
 
 
 ChatRequest.model_rebuild()
+
+
+# -------- Goals --------
+
+class GoalsBase(BaseModel):
+    # Daily nutrition targets (per day, NOT per serving). All optional so a
+    # user can set just a calorie target, just protein, etc.
+    calorie_target: Optional[float] = None
+    protein_target_g: Optional[float] = None
+    carbs_target_g: Optional[float] = None
+    fat_target_g: Optional[float] = None
+
+    # Weight goal (all in pounds; weekly_rate_lb is signed, negative = losing).
+    start_weight_lb: Optional[float] = None
+    target_weight_lb: Optional[float] = None
+    weekly_rate_lb: Optional[float] = None
+    start_date: Optional[date] = None
+
+
+class GoalsOut(GoalsBase):
+    model_config = ConfigDict(from_attributes=True)
+    updated_at: datetime
+
+
+# -------- Weight log --------
+
+class WeightEntryCreate(BaseModel):
+    weight_lb: float = Field(gt=0, lt=2000)
+    measured_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class WeightEntryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    weight_lb: float
+    measured_at: datetime
+    notes: Optional[str] = None
